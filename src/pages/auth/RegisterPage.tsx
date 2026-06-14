@@ -5,13 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { updateProfile } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
-import { auth } from '@/services/firebase';
 
 const schema = z.object({
   displayName: z.string().min(2, 'Mínimo 2 caracteres').max(30, 'Máximo 30 caracteres'),
@@ -34,10 +32,7 @@ export default function RegisterPage() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password);
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName: values.displayName });
-      }
+      await signUp(values.email, values.password, values.displayName);
       toast.success('Cuenta creada. Revisa tu email para verificarla.');
       navigate('/login');
     } catch (err) {

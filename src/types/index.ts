@@ -48,6 +48,8 @@ export interface Match {
   awayTeamId: string;
   homeTeamName: string;
   awayTeamName: string;
+  homeTeamFlagUrl?: string;
+  awayTeamFlagUrl?: string;
   scheduledAt: Timestamp;
   predictionDeadline: Timestamp;
   status: MatchStatus;

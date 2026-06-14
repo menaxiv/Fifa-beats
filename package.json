@@ -10,7 +10,7 @@
     "emulators": "docker compose up",
     "emulators:down": "docker compose down",
     "dev:all": "concurrently \"npm run emulators\" \"npm run dev\"",
-    "deploy": "npm run build && firebase deploy",
+    "deploy": "npm run build && firebase deploy --only hosting -P menaxiv",
     "deploy:rules": "firebase deploy --only firestore:rules",
     "deploy:functions": "cd functions && npm run build && cd .. && firebase deploy --only functions",
     "test": "vitest run",

@@ -6,8 +6,9 @@
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-initializeApp({ projectId: 'demo-beats' });
+const isProd = process.env.PROD === 'true';
+if (!isProd) process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+initializeApp({ projectId: isProd ? 'fifa-bets-61cf2' : 'demo-beats' });
 const db = getFirestore();
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
@@ -84,6 +85,7 @@ async function main() {
   }
 
   const nameToId = new Map<string, string>();
+  const nameToLogo = new Map<string, string>();
   const CHUNK = 25;
   const teamsArr = [...teamMap.values()];
   for (let i = 0; i < teamsArr.length; i += CHUNK) {
@@ -91,6 +93,7 @@ async function main() {
     for (const team of teamsArr.slice(i, i + CHUNK)) {
       const ref = db.collection('teams').doc();
       nameToId.set(team.name, ref.id);
+      nameToLogo.set(team.name, team.logo);
       batch.set(ref, { sport: 'nfl', name: team.name, shortName: team.short, flagUrl: team.logo, active: true });
     }
     await batch.commit();
@@ -135,6 +138,8 @@ async function main() {
         awayTeamId: awayId,
         homeTeamName: homeC.team.displayName,
         awayTeamName: awayC.team.displayName,
+        homeTeamFlagUrl: nameToLogo.get(homeC.team.displayName) ?? '',
+        awayTeamFlagUrl: nameToLogo.get(awayC.team.displayName) ?? '',
         scheduledAt: Timestamp.fromDate(scheduledAt),
         predictionDeadline: Timestamp.fromDate(predDeadline),
         tournament: 'NFL Preseason 2026',
@@ -153,7 +158,10 @@ async function main() {
   }
 
   console.log(`✅  Partidos: ${created}`);
-  console.log('\n🎉  NFL Preseason 2026 listo — http://localhost:4000/firestore\n');
+  const firestoreUrl = isProd
+    ? 'https://console.firebase.google.com/project/fifa-bets-61cf2/firestore'
+    : 'http://localhost:4000/firestore';
+  console.log(`\n🎉  NFL Preseason 2026 listo — ${firestoreUrl}\n`);
 }
 
 main().catch((e) => { console.error('❌', e); process.exit(1); });

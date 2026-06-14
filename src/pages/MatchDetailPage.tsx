@@ -45,7 +45,7 @@ export default function MatchDetailPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { home: 0, away: 0 },
+    defaultValues: { home: undefined, away: undefined },
   });
 
   useEffect(() => {
@@ -73,16 +73,24 @@ export default function MatchDetailPage() {
 
   const deadline = match.predictionDeadline.toDate();
   const deadlinePassed = deadline < new Date();
-  const canPredict = match.status === 'upcoming' && !deadlinePassed;
+  const scheduled = match.scheduledAt.toDate();
+  const now = new Date();
+  const effectiveStatus =
+    match.status === 'upcoming' &&
+    scheduled <= now &&
+    scheduled >= new Date(now.getTime() - 2 * 60 * 60 * 1000)
+      ? 'live'
+      : match.status;
+  const canPredict = effectiveStatus === 'upcoming' && !deadlinePassed;
 
-  const homeVal = form.watch('home') ?? 0;
-  const awayVal = form.watch('away') ?? 0;
+  const homeVal = Number(form.watch('home') ?? 0);
+  const awayVal = Number(form.watch('away') ?? 0);
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !match) return;
     setSubmitting(true);
     try {
-      await savePrediction(user.uid, match.id, match.sport, values.home, values.away);
+      await savePrediction(user.uid, match.id, match.sport, values.home, values.away, !!prediction);
       setPrediction({
         id: `${user.uid}_${match.id}`,
         uid: user.uid,
@@ -104,8 +112,6 @@ export default function MatchDetailPage() {
     }
   };
 
-  const scheduled = match.scheduledAt.toDate();
-
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       <button
@@ -119,7 +125,7 @@ export default function MatchDetailPage() {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{match.tournament ?? match.sport}{match.stage ? ` · ${match.stage}` : ''}</span>
-            <Badge variant="outline">{match.status}</Badge>
+            <Badge variant="outline">{effectiveStatus}</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -160,7 +166,14 @@ export default function MatchDetailPage() {
                       <FormItem className="flex-1">
                         <FormLabel className="text-center block">{match.homeTeamName}</FormLabel>
                         <FormControl>
-                          <Input type="number" min={0} max={99} className="text-center text-xl font-bold h-14" {...field} />
+                          <Input
+                            type="number" min={0} max={99}
+                            placeholder="0"
+                            className="text-center text-xl font-bold h-14"
+                            {...field}
+                            value={field.value ?? ''}
+                            onFocus={e => e.target.select()}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -174,7 +187,14 @@ export default function MatchDetailPage() {
                       <FormItem className="flex-1">
                         <FormLabel className="text-center block">{match.awayTeamName}</FormLabel>
                         <FormControl>
-                          <Input type="number" min={0} max={99} className="text-center text-xl font-bold h-14" {...field} />
+                          <Input
+                            type="number" min={0} max={99}
+                            placeholder="0"
+                            className="text-center text-xl font-bold h-14"
+                            {...field}
+                            value={field.value ?? ''}
+                            onFocus={e => e.target.select()}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -183,9 +203,11 @@ export default function MatchDetailPage() {
                 </div>
 
                 <div className="rounded-md bg-muted p-3 text-xs space-y-1 text-center text-muted-foreground">
-                  <div>Ganador predicho: <span className="font-semibold text-foreground">
-                    {homeVal > awayVal ? match.homeTeamName : homeVal < awayVal ? match.awayTeamName : 'Empate'}
-                  </span></div>
+                  {form.watch('home') !== undefined && form.watch('away') !== undefined && (
+                    <div>Ganador predicho: <span className="font-semibold text-foreground">
+                      {homeVal > awayVal ? match.homeTeamName : homeVal < awayVal ? match.awayTeamName : 'Empate'}
+                    </span></div>
+                  )}
                   <div>Puntos posibles: marcador exacto <span className="font-semibold text-foreground">{POINTS_EXACT}</span> pts · ganador correcto <span className="font-semibold text-foreground">{POINTS_WINNER}</span> pts</div>
                 </div>
 
@@ -199,9 +221,9 @@ export default function MatchDetailPage() {
       ) : (
         <Card>
           <CardContent className="py-4 text-center text-sm text-muted-foreground">
-            {match.status === 'upcoming'
+            {effectiveStatus === 'upcoming'
               ? 'El plazo para predecir ha cerrado'
-              : match.status === 'live'
+              : effectiveStatus === 'live'
               ? 'El partido está en curso'
               : 'El partido ha finalizado'}
             {prediction && (

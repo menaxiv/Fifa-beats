@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDoc, setDoc, updateDoc, getDocs,
+  collection, doc, setDoc, updateDoc, getDocs, getDoc,
   query, where, orderBy, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -19,6 +19,7 @@ export const savePrediction = async (
   sport: string,
   predictedHomeScore: number,
   predictedAwayScore: number,
+  isUpdate: boolean,
 ): Promise<void> => {
   const predictedWinner: Winner =
     predictedHomeScore > predictedAwayScore ? 'home' :
@@ -26,9 +27,8 @@ export const savePrediction = async (
 
   const id = `${uid}_${matchId}`;
   const ref = doc(db, COL, id);
-  const existing = await getDoc(ref);
 
-  if (existing.exists()) {
+  if (isUpdate) {
     await updateDoc(ref, {
       predictedHomeScore,
       predictedAwayScore,

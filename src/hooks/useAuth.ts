@@ -5,9 +5,11 @@ import {
   signOut,
   sendPasswordResetEmail,
   sendEmailVerification,
+  updateProfile,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { auth } from '@/services/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/services/firebase';
 import { useAuthStore } from '@/store/authStore';
 
 export function useAuthListener() {
@@ -29,9 +31,22 @@ export function useAuth() {
   const signIn = (email: string, password: string) =>
     signInWithEmailAndPassword(auth, email, password);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, displayName: string) => {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    await sendEmailVerification(user);
+    await Promise.all([
+      updateProfile(user, { displayName }),
+      setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        displayName,
+        email,
+        points: 50,
+        totalPredictions: 0,
+        correctPredictions: 0,
+        exactPredictions: 0,
+        createdAt: serverTimestamp(),
+      }),
+      sendEmailVerification(user),
+    ]);
   };
 
   const logOut = () => signOut(auth);

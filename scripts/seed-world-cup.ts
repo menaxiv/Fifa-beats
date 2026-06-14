@@ -14,9 +14,10 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import * as cheerio from 'cheerio';
 import type { CheerioAPI } from 'cheerio';
 
-// ── Emulator ───────────────────────────────────────────────────────────────
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-initializeApp({ projectId: 'demo-beats' });
+// ── Target: emulator (default) or production (PROD=true) ──────────────────
+const isProd = process.env.PROD === 'true';
+if (!isProd) process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+initializeApp({ projectId: isProd ? 'fifa-bets-61cf2' : 'demo-beats' });
 const db = getFirestore();
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -80,6 +81,13 @@ const SHORT: Record<string, string> = {
 function normalizeName(raw: string): string {
   const clean = raw.trim().replace(/\s+/g, ' ');
   return NAME_MAP[clean] ?? clean;
+}
+
+// Stable, deterministic Firestore ID for a match (survives re-seeds)
+function makeMatchId(homeTeam: string, awayTeam: string): string {
+  const slug = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return `wc2026_${slug(homeTeam)}_${slug(awayTeam)}`;
 }
 
 function makeShort(name: string): string {
@@ -303,8 +311,10 @@ async function main() {
 
   // ── Teams ──────────────────────────────────────────────────────────────
   const nameToId = new Map<string, string>();
+  const nameToFlag = new Map<string, string>();
   await writeBatch('teams', allTeams, (team, ref) => {
     nameToId.set(team.name, ref.id);
+    nameToFlag.set(team.name, team.flagUrl);
     return {
       sport: 'football',
       name: team.name,
@@ -340,13 +350,16 @@ async function main() {
         ? m.homeScore! > m.awayScore! ? 'home' : m.homeScore! < m.awayScore! ? 'away' : 'draw'
         : null;
 
-      const ref = db.collection('matches').doc();
+      const stableId = makeMatchId(m.homeTeam, m.awayTeam);
+      const ref = db.collection('matches').doc(stableId);
       batch.set(ref, {
         sport: 'football',
         homeTeamId: homeId,
         awayTeamId: awayId,
         homeTeamName: m.homeTeam,
         awayTeamName: m.awayTeam,
+        homeTeamFlagUrl: nameToFlag.get(m.homeTeam) ?? '',
+        awayTeamFlagUrl: nameToFlag.get(m.awayTeam) ?? '',
         scheduledAt: Timestamp.fromDate(m.scheduledAt),
         predictionDeadline: Timestamp.fromDate(m.predictionDeadline),
         tournament: 'FIFA World Cup 2026',
@@ -380,7 +393,10 @@ async function main() {
   const upcomingCount = allMatches.filter((m) => m.homeScore === null).length;
   const finishedCount = allMatches.filter((m) => m.homeScore !== null).length;
   console.log(`\n   Próximos: ${upcomingCount}  |  Finalizados: ${finishedCount}`);
-  console.log('\n🎉  Seed completado — http://localhost:4000/firestore\n');
+  const firestoreUrl = isProd
+    ? 'https://console.firebase.google.com/project/fifa-bets-61cf2/firestore'
+    : 'http://localhost:4000/firestore';
+  console.log(`\n🎉  Seed completado — ${firestoreUrl}\n`);
 }
 
 main().catch((e) => {

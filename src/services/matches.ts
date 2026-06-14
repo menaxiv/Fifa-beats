@@ -7,7 +7,29 @@ import type { Match, MatchStatus } from '@/types';
 
 const COL = 'matches';
 
+const MATCH_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+function isEffectivelyLive(m: Match): boolean {
+  const scheduled = m.scheduledAt.toDate();
+  const now = new Date();
+  return scheduled <= now && scheduled >= new Date(now.getTime() - MATCH_DURATION_MS);
+}
+
 export const getMatches = async (status?: MatchStatus): Promise<Match[]> => {
+  if (status === 'live') {
+    // Fetch both explicitly-live docs and upcoming docs that have already started
+    const [liveSnap, upcomingSnap] = await Promise.all([
+      getDocs(query(collection(db, COL), where('status', '==', 'live'), orderBy('scheduledAt'))),
+      getDocs(query(collection(db, COL), where('status', '==', 'upcoming'), orderBy('scheduledAt'))),
+    ]);
+    const liveMatches = liveSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Match);
+    const effectiveLive = upcomingSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Match)
+      .filter(isEffectivelyLive);
+    const seen = new Set(liveMatches.map((m) => m.id));
+    return [...liveMatches, ...effectiveLive.filter((m) => !seen.has(m.id))];
+  }
+
   const q = status
     ? query(collection(db, COL), where('status', '==', status), orderBy('scheduledAt'))
     : query(collection(db, COL), orderBy('scheduledAt', 'desc'));

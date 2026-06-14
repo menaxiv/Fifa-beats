@@ -19,7 +19,8 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isOwner(uid)
         && request.resource.data.points == 50
-        && request.resource.data.keys().hasAll(['uid','displayName','email','points','createdAt']);
+        && request.resource.data.keys().hasAll(['uid','displayName','email','points','createdAt'])
+        && request.resource.data.uid == uid;
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['displayName','avatarUrl','updatedAt'])
