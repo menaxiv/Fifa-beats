@@ -5,6 +5,9 @@ Imagina una mezcla entre una quiniela deportiva y un videojuego de puntuación.
 Fifa Beats es una plataforma donde los usuarios intentan adivinar los resultados de partidos reales para ganar puntos virtuales y competir contra otros jugadores en una clasificación global.
 
 ## Paso 1: Crear una cuenta
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/efe52900-4292-47e7-a938-dcc692f8004d" />
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/8bf16e7a-d5b8-47e1-95f2-ec88b810ccb2" />
+
 
 Cuando una persona se registra por primera vez:
 
@@ -17,8 +20,12 @@ Estos puntos no tienen valor monetario; simplemente sirven para competir dentro 
 ---
 
 ## Paso 2: Ver los partidos disponibles
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/4a29bb0d-5eed-420d-b0cd-11b4f0da0388" />
+
 
 Una vez dentro de la aplicación, el usuario puede ver todos los partidos próximos.
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/71d53987-a87f-4e15-bc3e-20fd0f68d883" />
+
 
 Por ejemplo:
 
@@ -68,7 +75,9 @@ Cuando termina el partido real, un administrador introduce el resultado oficial.
 
 Por ejemplo:
 
-Argentina 3 - 1 Brasil
+Alemania 3 - 1 Curacao
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/c648ccc2-f991-4986-9a84-c1e5e84bda37" />
+
 
 Ese resultado se convierte en la referencia para evaluar a todos los participantes.
 
@@ -87,6 +96,7 @@ Argentina 3 - 1 Brasil
 ### Usuario A
 
 Predijo:
+
 
 Argentina 3 - 1 Brasil
 
@@ -159,6 +169,7 @@ Esto permite medir su rendimiento durante el torneo.
 ---
 
 ## ¿Por qué es seguro?
+<img width="2482" height="1291" alt="image" src="https://github.com/user-attachments/assets/6b282ffc-adcc-4afd-8a3e-c57e2761eddf" />
 
 Los usuarios nunca pueden modificar sus propios puntos.
 
