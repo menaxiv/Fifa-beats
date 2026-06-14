@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return request.auth.token.admin == true;
+    }
+
+    // users: el usuario puede editar solo displayName y avatarUrl
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(uid)
+        && request.resource.data.points == 50
+        && request.resource.data.keys().hasAll(['uid','displayName','email','points','createdAt']);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName','avatarUrl','updatedAt'])
+        && !isAdmin();
+    }
+
+    // sports: lectura pública, escritura solo admin
+    match /sports/{sportId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // teams: lectura pública, escritura solo admin
+    match /teams/{teamId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // matches: lectura autenticada, escritura solo admin/Functions
+    match /matches/{matchId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // predictions: el usuario crea/modifica solo las suyas, dentro del plazo
+    match /predictions/{predictionId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.uid);
+      allow create: if isAuthenticated()
+        && isOwner(request.resource.data.uid)
+        && predictionId == request.auth.uid + '_' + request.resource.data.matchId
+        && request.resource.data.pointsAwarded == null
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasAll([
+            'uid','matchId','sport',
+            'predictedHomeScore','predictedAwayScore',
+            'predictedWinner','status','createdAt'
+           ]);
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.uid)
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['predictedHomeScore','predictedAwayScore','predictedWinner','updatedAt']);
+    }
+
+    // point_transactions: solo lectura propia, escritura bloqueada desde cliente
+    match /point_transactions/{txnId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.uid);
+      allow write: if false;
+    }
+
+    // leaderboards: lectura autenticada, escritura bloqueada desde cliente
+    match /leaderboards/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+  }
+}

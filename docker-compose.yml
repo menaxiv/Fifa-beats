@@ -1,0 +1,22 @@
+services:
+  emulators:
+    image: andreysenov/firebase-tools
+    user: root
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "9099:9099"   # Auth
+      - "8080:8080"   # Firestore
+      - "5001:5001"   # Functions
+      - "5000:5000"   # Hosting
+    volumes:
+      - .:/home/node/app
+      - functions_modules:/home/node/app/functions/node_modules
+    working_dir: /home/node/app
+    command: >
+      sh -c "cd functions && npm ci && npm run build && cd .. &&
+             firebase emulators:start --project demo-beats"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx1g
+
+volumes:
+  functions_modules:
