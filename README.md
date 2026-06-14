@@ -1,4 +1,4 @@
-# ¿Cómo funciona Fifa Bets? (Explicación sencilla)
+# ¿Cómo funciona Fifa Beats?
 
 Imagina una mezcla entre una quiniela deportiva y un videojuego de puntuación.
 
