@@ -11,7 +11,8 @@
     "seed:nfl:prod": "PROD=true tsx seed-nfl-preseason.ts",
     "seed:wbc:prod": "PROD=true tsx seed-wbc-2026.ts",
     "update:wc:prod": "PROD=true tsx update-wc-results.ts",
-    "cleanup:prod": "PROD=true tsx cleanup-orphaned-predictions.ts"
+    "cleanup:prod": "PROD=true tsx cleanup-orphaned-predictions.ts",
+    "set-admin": "tsx set-admin.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

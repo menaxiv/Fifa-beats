@@ -63,7 +63,7 @@ export interface Match {
 
 export type PredictionStatus =
   | 'pending'
-  | 'correct_exact'
+  | 'correct_exact' 
   | 'correct_winner'
   | 'incorrect'
   | 'cancelled';

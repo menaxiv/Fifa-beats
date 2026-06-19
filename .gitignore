@@ -30,3 +30,4 @@ functions/lib/
 .env.local
 .env.*.local
 scripts/*firebase-adminsdk*.json
+scripts/serviceAccount.json
